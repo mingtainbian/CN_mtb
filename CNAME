@@ -1,1 +1,10 @@
-Hello world
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="{CHARSET}">
+		<title>明天扁</title>
+	</head>
+	Hello world
+	<body>
+	</body>
+</html>
