@@ -2,147 +2,58 @@
 <title>明天扁-instant</title>
 <body> 
 Hello World!
-</body> 
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<title></title>
-	</head>
-	<style type="text/css">
-		html,body{
-			margin :0 0;
-			padding:  0 0;
-			width: 100%;
-			height: 100%;
-		}
-	</style>
-	<body>
-		<canvas id="cav" width="600" height="600"></canvas>
-	</body>
-	<script type="text/javascript">
-		var canvas = document.getElementById("cav");
-		var ctx = canvas.getContext("2d");
-		
-		var date = new Date();
-		var year = date.getYear();
-		var mouth = date.getMonth();
-		var today = date.getDate();
-		var week = date.getDay();
-		
-		var mouth = 5;
-		var today = 23;
-		var week = 6;
-		
-		var cardSize = 50 ;
-		
-		var array_three = [4,6,9,11];
-		var array_threeone = [1,3,5,7,8,10,12];
-		var array_week = ["日","一","二","三","四","五","六"]
-		
-		var firstDraw ;//1号绘制位置
-		var wIdx = today % 7 ;
-		
-		if(week >= wIdx){
-			firstDraw = week - wIdx + 1;
-		}else{
-			firstDraw = week - wIdx + 8;
-		}
- 
-		var dayIndex = 1;
-		var countDay = 30 ;
- 
-		if(array_three.indexOf(mouth) > -1){
-			countDay = 30;
-		}else if(array_threeone.indexOf(mouth) > -1){
-			countDay = 31 ;
-		}else{
-			countDay = 28 ;//未考虑瑞年情况
-		}
-		
-		var row = 6;
-		if(7 - firstDraw + 7 * 4 < countDay){//确定表格行数，防止日期绘制不全
-			row = 7;
-		}
-		
-		/*绘制背景表格*/
-		function drawbg(){
-			for (var i = 0; i < row; i++) {
-				for (var j = 0; j < 7; j++) {
-					ctx.strokeRect(j * cardSize , i * cardSize, cardSize , cardSize);
-				}
-			}
-		}
-		
-		drawbg();
-		
-		for (var i = 0; i < row; i++) {//开始绘制日期数
-			for (var j = 0; j < 7; j++) {
-				if( i == 0){//表格第一行绘制星期
-					drawDate(array_week[j],i,j);
-					continue;
-				}
-					
-				if(i == 1 && j < firstDraw){//确定1号绘制位置
-					continue;
-				}
-				
-				if(dayIndex > countDay){//只绘制月份的天数
-					break;
-				}
-				
-				drawDate(dayIndex ++ ,i,j);
-			}
-		}
-		
-		/*绘制确定日期*/
-		function drawDate(txt,i,j){
-			if(txt == today){
-				drawTodaybg(j,i);
-			}
-			
-			ctx.textAlign = "center";
-			ctx.font = (cardSize / 2) + 'px Arial';
-			ctx.fillText(txt, j * cardSize + cardSize / 2 , i * cardSize + cardSize / 3 * 2 );
-		}
-		
-		/*绘制标志今天的背景图*/
-		function drawTodaybg(i,j){
-			ctx.save();
-					
-			ctx.beginPath();
-			ctx.strokeStyle = "red";
-			ctx.arc(i * cardSize + cardSize / 2,j * cardSize + cardSize / 2, cardSize / 2 - 10 ,- Math.PI  ,Math.PI  * 0.5);
-			ctx.stroke();
-			ctx.closePath();
-			
-			ctx.beginPath();
-			ctx.arc(i * cardSize + cardSize / 2,j * cardSize + cardSize / 2, cardSize / 2 - 9 ,- Math.PI  ,Math.PI  * 0.4);
-			ctx.stroke();
-			ctx.closePath();
-			
-			ctx.beginPath();
-			ctx.arc(i * cardSize + cardSize / 2,j * cardSize + cardSize / 2, cardSize / 2 - 8 ,- Math.PI  ,Math.PI  * 0.3);
-			ctx.stroke();
-			ctx.closePath();
-			
-			ctx.beginPath();
-			ctx.arc(i * cardSize + cardSize / 2,j * cardSize + cardSize / 2, cardSize / 2 - 7 ,- Math.PI  ,Math.PI  * 0.2);
-			ctx.stroke();
-			ctx.closePath();
-			
-			ctx.beginPath();
-			ctx.arc(i * cardSize + cardSize / 2,j * cardSize + cardSize / 2, cardSize / 2 - 6 ,- Math.PI ,Math.PI  * 0.1);
-			ctx.stroke();
-			ctx.closePath();
-			
-			ctx.restore();
-		}
-		
-	</script>
-</html>
---------------------- 
-作者：可我不爱聪明 
-来源：CSDN 
-原文：https://blog.csdn.net/u012601195/article/details/47860617 
-版权声明：本文为博主原创文章，转载请附上博文链接！
+ <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        #display {
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cvs" class="hidden" width="1980" height="1080"></canvas>
+    <canvas id="screenImage" class="hidden" width="234" height="357"></canvas>
+    <canvas id="rili" class="hidden" width="600" height="600"></canvas>
+    <canvas id="display"></canvas>
+    <script>
+        var cvs = document.getElementById("cvs");
+        var ctx = cvs.getContext("2d");
+        var display = document.getElementById("display");
+        var displayCtx = display.getContext("2d");
+        var screenImage = document.getElementById("screenImage");
+        var screenImageCtx = screenImage.getContext("2d");
+        var rili = document.getElementById("rili");
+        var riliCtx = rili.getContext("2d");
+        var songInfo = {};
+        var AllTimeBak = 0;
+        var NowBak = 0;
+        var DrawWarning = false;
+        function updateSongInfo() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', "http://127.0.0.1:62333/BGMName", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200 || xhr.status == 304) {
+                    songInfo = JSON.parse(xhr.responseText);
+                    if (songInfo.AllTime <= 0)
+                        songInfo.AllTime = AllTimeBak;
+                    if (songInfo.Now <= 0)
+                        songInfo.Now = NowBak;
+                    AllTimeBak = songInfo.AllTime;
+                    NowBak = songInfo.Now;
+                    DrawWarning = false;
+                } else if(xhr.readyState == 4 && xhr.status != 200) {
+                    DrawWarning = true;
+                }
+            };
+            xhr.send();
+        }
+        // 果然还是复制别人的轮子这种东西最刺激啦 出处：https://blog.csdn.net/u012601195/article/details/47860617
